@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Günlük gelir gider takibi: nereye harcıyorsun, para nereden geliyor, bütçen ne durumda. Veriler yalnızca senin tarayıcında kalır.">
+<meta name="color-scheme" content="light dark">
+<title>Bütçe · Günlük Gelir Gider Takibi</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>₺</text></svg>">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#icerik">İçeriğe atla</a>
+
+<header class="topbar">
+  <div class="topbar__brand">
+    <span class="topbar__mark" aria-hidden="true">₺</span>
+    <span class="topbar__name">Bütçe</span>
+  </div>
+
+  <div class="monthnav">
+    <button type="button" class="iconbtn" data-month-step="-1" aria-label="Önceki ay">‹</button>
+    <button type="button" class="monthnav__label" id="monthLabel" title="Bu aya dön">—</button>
+    <button type="button" class="iconbtn" data-month-step="1" aria-label="Sonraki ay">›</button>
+  </div>
+
+  <div class="topbar__actions">
+    <button type="button" class="iconbtn" id="themeBtn" aria-label="Tema değiştir" title="Tema">◐</button>
+    <button type="button" class="btn btn--ghost" id="addBtn">+ İşlem</button>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Bölümler">
+  <button type="button" class="tab" role="tab" data-tab="panel" aria-selected="true">Panel</button>
+  <button type="button" class="tab" role="tab" data-tab="islemler" aria-selected="false">İşlemler</button>
+  <button type="button" class="tab" role="tab" data-tab="tekrar" aria-selected="false">Tekrarlayanlar</button>
+  <button type="button" class="tab" role="tab" data-tab="butce" aria-selected="false">Bütçe</button>
+  <button type="button" class="tab" role="tab" data-tab="ayarlar" aria-selected="false">Ayarlar</button>
+</nav>
+
+<main id="icerik">
+
+  <!-- ============ PANEL ============ -->
+  <section class="view" data-view="panel">
+
+    <div class="stats" id="statsRow"></div>
+
+    <div class="grid">
+      <section class="card card--half">
+        <header class="card__head">
+          <h2 class="card__title">Nereye gidiyor</h2>
+          <p class="card__sub">Bu ayın giderleri, kategoriye göre</p>
+        </header>
+        <div class="split">
+          <div class="split__chart" id="chartExpense"></div>
+          <div class="split__list" id="listExpense"></div>
+        </div>
+      </section>
+
+      <section class="card card--half">
+        <header class="card__head">
+          <h2 class="card__title">Nereden geliyor</h2>
+          <p class="card__sub">Bu ayın gelirleri, kaynağa göre</p>
+        </header>
+        <div class="split">
+          <div class="split__chart" id="chartIncome"></div>
+          <div class="split__list" id="listIncome"></div>
+        </div>
+      </section>
+
+      <section class="card card--full">
+        <header class="card__head">
+          <h2 class="card__title">Ay içi günlük harcama</h2>
+          <p class="card__sub">Hangi günlerde ne kadar harcadınız — o günün geliri ipucunda görünür</p>
+          <div id="legendDaily"></div>
+        </header>
+        <div id="chartDaily"></div>
+      </section>
+
+      <section class="card card--half">
+        <header class="card__head">
+          <h2 class="card__title">Kümülatif bakiye</h2>
+          <p class="card__sub">Ay boyunca elde kalan tutarın seyri</p>
+        </header>
+        <div id="chartCumulative"></div>
+      </section>
+
+      <section class="card card--half">
+        <header class="card__head">
+          <h2 class="card__title">Son 12 ay</h2>
+          <p class="card__sub">Aylık gelir ve gider karşılaştırması</p>
+          <div id="legendMonthly"></div>
+        </header>
+        <div id="chartMonthly"></div>
+      </section>
+
+      <section class="card card--half">
+        <header class="card__head">
+          <h2 class="card__title">Bütçe durumu</h2>
+          <p class="card__sub">Kategori limitlerine göre bu ay</p>
+        </header>
+        <div id="budgetSummary"></div>
+      </section>
+
+      <section class="card card--half">
+        <header class="card__head">
+          <h2 class="card__title">En büyük harcamalar</h2>
+          <p class="card__sub">Bu ayın en yüklü tek kalemleri</p>
+        </header>
+        <div id="topList"></div>
+      </section>
+
+      <section class="card card--full">
+        <header class="card__head">
+          <h2 class="card__title">Hesap hareketi</h2>
+          <p class="card__sub">Bankadan, karttan ve nakitten ne girdi ne çıktı</p>
+        </header>
+        <div id="accountsTable"></div>
+      </section>
+
+      <section class="card card--full">
+        <header class="card__head">
+          <h2 class="card__title">Gelir–gider tablosu</h2>
+          <p class="card__sub">Kategori bazında son 6 ay</p>
+          <button type="button" class="btn btn--ghost btn--sm" id="copyPivot">Tabloyu kopyala</button>
+        </header>
+        <div class="scrollx" id="pivotTable"></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- ============ İŞLEMLER ============ -->
+  <section class="view" data-view="islemler" hidden>
+    <section class="card card--full">
+      <header class="card__head card__head--row">
+        <h2 class="card__title">İşlemler</h2>
+        <div class="filters">
+          <input type="search" id="fltSearch" class="input" placeholder="Notlarda ara…" aria-label="Notlarda ara">
+          <select id="fltType" class="input" aria-label="Tür"></select>
+          <select id="fltCategory" class="input" aria-label="Kategori"></select>
+          <select id="fltAccount" class="input" aria-label="Hesap"></select>
+          <select id="fltRange" class="input" aria-label="Dönem"></select>
+        </div>
+      </header>
+      <div id="txSummary" class="txsummary"></div>
+      <div class="scrollx" id="txTable"></div>
+    </section>
+  </section>
+
+  <!-- ============ TEKRARLAYANLAR ============ -->
+  <section class="view" data-view="tekrar" hidden>
+    <section class="card card--full">
+      <header class="card__head card__head--row">
+        <div>
+          <h2 class="card__title">Tekrarlayan işlemler</h2>
+          <p class="card__sub">Maaş, kira, abonelik gibi sabit kalemler her dönem otomatik işlenir</p>
+        </div>
+        <button type="button" class="btn" id="addRecurring">+ Kural ekle</button>
+      </header>
+      <div id="recurringList"></div>
+    </section>
+  </section>
+
+  <!-- ============ BÜTÇE ============ -->
+  <section class="view" data-view="butce" hidden>
+    <section class="card card--full">
+      <header class="card__head">
+        <h2 class="card__title">Aylık bütçe limitleri</h2>
+        <p class="card__sub">Kategori başına limit gir; limit 0 ise takip edilmez</p>
+      </header>
+      <div id="budgetEditor"></div>
+    </section>
+  </section>
+
+  <!-- ============ AYARLAR ============ -->
+  <section class="view" data-view="ayarlar" hidden>
+    <div class="grid">
+      <section class="card card--half">
+        <header class="card__head card__head--row">
+          <h2 class="card__title">Kategoriler</h2>
+          <button type="button" class="btn btn--ghost btn--sm" id="addCategory">+ Kategori</button>
+        </header>
+        <div id="categoryList"></div>
+      </section>
+
+      <section class="card card--half">
+        <header class="card__head card__head--row">
+          <h2 class="card__title">Hesaplar</h2>
+          <button type="button" class="btn btn--ghost btn--sm" id="addAccount">+ Hesap</button>
+        </header>
+        <div id="accountList"></div>
+      </section>
+
+      <section class="card card--half">
+        <header class="card__head">
+          <h2 class="card__title">Genel</h2>
+        </header>
+        <div class="formrow">
+          <label class="field">
+            <span class="field__label">Para birimi</span>
+            <select id="setCurrency" class="input">
+              <option value="TRY">₺ Türk lirası</option>
+              <option value="USD">$ ABD doları</option>
+              <option value="EUR">€ Euro</option>
+              <option value="GBP">£ Sterlin</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field__label">Tema</span>
+            <select id="setTheme" class="input">
+              <option value="auto">Sistemle aynı</option>
+              <option value="light">Açık</option>
+              <option value="dark">Koyu</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="card card--half">
+        <header class="card__head">
+          <h2 class="card__title">Veri</h2>
+          <p class="card__sub">Veriler yalnızca bu tarayıcıda saklanır. Sunucuya hiçbir şey gönderilmez.</p>
+        </header>
+        <div class="btnrow">
+          <button type="button" class="btn" id="exportBtn">JSON dışa aktar</button>
+          <button type="button" class="btn" id="importBtn">JSON içe aktar</button>
+          <button type="button" class="btn btn--ghost" id="sampleBtn">Örnek veri yükle</button>
+          <button type="button" class="btn btn--danger" id="resetBtn">Tüm veriyi sil</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+        <p class="hint" id="storageHint"></p>
+      </section>
+    </div>
+  </section>
+
+</main>
+
+<button type="button" class="fab" id="fab" aria-label="Yeni işlem ekle" title="Yeni işlem (N)">+</button>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal__backdrop" data-close="1"></div>
+  <div class="modal__box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <header class="modal__head">
+      <h2 class="modal__title" id="modalTitle"></h2>
+      <button type="button" class="iconbtn" data-close="1" aria-label="Kapat">×</button>
+    </header>
+    <div class="modal__body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="assets/js/util.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/recurring.js"></script>
+<script src="assets/js/analytics.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
