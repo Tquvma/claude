@@ -84,3 +84,8 @@ Birkaç tasarım kararı:
   dilim çizip kalanını "Diğer"e katlar.
 - **Tek eksen kuralı.** Günlük harcama ile kümülatif bakiye aynı birimde ama çok
   farklı büyüklükte olduğu için ikinci bir y ekseni yerine ayrı grafiklere ayrıldı.
+
+## Diğer araçlar
+
+- [`tefas-fon-takip/`](tefas-fon-takip/README.md) — TEFAS fonlarının son
+  fiyatını ve varlık dağılımını çeken bağımsız Python betiği.
