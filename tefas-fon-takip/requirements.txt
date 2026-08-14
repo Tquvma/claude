@@ -1,2 +1,5 @@
 tefas-crawler
 pandas
+requests
+openpyxl
+xlrd

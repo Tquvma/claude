@@ -3,7 +3,7 @@ TEFAS Fon Takip - v1
 Takip edilen fonların son fiyatını ve varlık dağılımını çeker.
 
 Kurulum:
-    pip install tefas-crawler pandas
+    pip install -r requirements.txt
 
 Çalıştırma:
     python fon_takip.py
@@ -12,13 +12,8 @@ Kurulum:
 from datetime import date, timedelta
 
 import pandas as pd
-from tefas import Crawler
 
-# --- Ayarlar -----------------------------------------------------------
-FONLAR = ["YAY", "YBE", "PHE", "AFA", "AES", "TP2", "YFAY1"]  # istediğin gibi düzenle
-GUN_SAYISI = 7        # son kaç güne bakılsın (hafta sonu/tatil payı için)
-CSV_KAYDET = True     # True ise sonuçları fon_dagilim.csv olarak kaydeder
-# ----------------------------------------------------------------------
+from ayarlar import CSV_KAYDET, FONLAR, GUN_SAYISI
 
 # Bu kolonlar dağılım yüzdesi DEĞİL; geri kalan sayısal kolonlar varlık dağılımıdır.
 META_KOLONLAR = {"date", "code", "title", "price", "market_cap",
@@ -31,13 +26,19 @@ def son_veri(df: pd.DataFrame) -> pd.DataFrame:
     return df.groupby("code", as_index=False).tail(1)
 
 
-def main() -> None:
+def verileri_cek(fonlar=FONLAR, gun_sayisi=GUN_SAYISI) -> pd.DataFrame | None:
+    """Her fonun son verisini TEFAS'tan çeker; hiç veri yoksa None döner.
+
+    drift_rapor.py de bu fonksiyonu kullanır.
+    """
+    from tefas import Crawler  # ağ gerektirmeyen kullanımları bloklamasın diye burada
+
     crawler = Crawler()
     bugun = date.today()
-    baslangic = bugun - timedelta(days=GUN_SAYISI)
+    baslangic = bugun - timedelta(days=gun_sayisi)
 
     tum = []
-    for kod in FONLAR:
+    for kod in fonlar:
         try:
             df = crawler.fetch(start=str(baslangic), end=str(bugun), name=kod)
             if df.empty:
@@ -48,10 +49,15 @@ def main() -> None:
             print(f"[!] {kod}: hata -> {e}")
 
     if not tum:
+        return None
+    return son_veri(pd.concat(tum, ignore_index=True))
+
+
+def main() -> None:
+    data = verileri_cek()
+    if data is None:
         print("Hiç veri çekilemedi. İnternet bağlantısını ve fon kodlarını kontrol et.")
         return
-
-    data = son_veri(pd.concat(tum, ignore_index=True))
 
     for _, satir in data.iterrows():
         print("=" * 60)
