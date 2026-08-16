@@ -23,6 +23,9 @@ from pathlib import Path
 
 import pandas as pd
 
+if sys.stdout.encoding != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8")
+
 # Hisse bölümünü başlatan başlıklar (büyük harfe çevrilmiş, Türkçe İ->I normalize)
 HISSE_BASLIKLAR = ("HISSE SENED", "PAY SENED", "ORTAKLIK PAY")
 # Hisse bölümünü bitiren diğer varlık sınıfı başlıkları

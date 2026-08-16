@@ -12,9 +12,13 @@ HEDEFLER'i kendi planına göre doldur.
 """
 
 import argparse
+import sys
 from datetime import date
 
 from ayarlar import DRIFT_ESIK, HEDEFLER, NAKIT_TL, PORTFOY
+
+if sys.stdout.encoding != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8")
 
 # --demo çıktısının ağ olmadan görülebilmesi için örnek veriler
 DEMO_PORTFOY = {"YAY": 1200, "YBE": 900, "PHE": 350, "AFA": 800,

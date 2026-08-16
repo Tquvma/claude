@@ -9,9 +9,13 @@ Kurulum:
     python fon_takip.py
 """
 
+import sys
 from datetime import date, timedelta
 
 import pandas as pd
+
+if sys.stdout.encoding != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8")
 
 from ayarlar import CSV_KAYDET, FONLAR, GUN_SAYISI
 
@@ -26,11 +30,8 @@ def son_veri(df: pd.DataFrame) -> pd.DataFrame:
     return df.groupby("code", as_index=False).tail(1)
 
 
-def verileri_cek(fonlar=FONLAR, gun_sayisi=GUN_SAYISI) -> pd.DataFrame | None:
-    """Her fonun son verisini TEFAS'tan çeker; hiç veri yoksa None döner.
-
-    drift_rapor.py de bu fonksiyonu kullanır.
-    """
+def ham_veri_cek(fonlar=FONLAR, gun_sayisi=GUN_SAYISI) -> pd.DataFrame | None:
+    """Her fon için son gun_sayisi gündeki tüm satırları TEFAS'tan çeker."""
     from tefas import Crawler  # ağ gerektirmeyen kullanımları bloklamasın diye burada
 
     crawler = Crawler()
@@ -50,19 +51,47 @@ def verileri_cek(fonlar=FONLAR, gun_sayisi=GUN_SAYISI) -> pd.DataFrame | None:
 
     if not tum:
         return None
-    return son_veri(pd.concat(tum, ignore_index=True))
+    return pd.concat(tum, ignore_index=True)
+
+
+def verileri_cek(fonlar=FONLAR, gun_sayisi=GUN_SAYISI) -> pd.DataFrame | None:
+    """Her fonun son verisini TEFAS'tan çeker; hiç veri yoksa None döner.
+
+    drift_rapor.py de bu fonksiyonu kullanır.
+    """
+    ham = ham_veri_cek(fonlar, gun_sayisi)
+    if ham is None:
+        return None
+    return son_veri(ham)
+
+
+def gunluk_getiri(ham: pd.DataFrame) -> dict[str, float]:
+    """Her fon için son iki günün fiyatına göre günlük getiri yüzdesini döndürür."""
+    getiriler = {}
+    for kod, grup in ham.sort_values("date").groupby("code"):
+        if len(grup) < 2:
+            continue
+        onceki, son = grup.iloc[-2]["price"], grup.iloc[-1]["price"]
+        if onceki:
+            getiriler[kod] = (son - onceki) / onceki * 100
+    return getiriler
 
 
 def main() -> None:
-    data = verileri_cek()
-    if data is None:
+    ham = ham_veri_cek()
+    if ham is None:
         print("Hiç veri çekilemedi. İnternet bağlantısını ve fon kodlarını kontrol et.")
         return
+
+    data = son_veri(ham)
+    getiriler = gunluk_getiri(ham)
 
     for _, satir in data.iterrows():
         print("=" * 60)
         print(f"{satir['code']} - {satir.get('title', '')}")
-        print(f"Tarih: {satir['date']}   Fiyat: {satir['price']}")
+        getiri = getiriler.get(satir["code"])
+        getiri_str = f"{getiri:+.2f}%" if getiri is not None else "n/a"
+        print(f"Tarih: {satir['date']}   Fiyat: {satir['price']}   Günlük getiri: {getiri_str}")
         print("Varlık dağılımı (%):")
         for kolon, deger in satir.items():
             if kolon in META_KOLONLAR:
