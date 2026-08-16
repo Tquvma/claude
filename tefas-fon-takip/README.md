@@ -1,8 +1,8 @@
 # TEFAS Fon Takip
 
-TEFAS fonlarını takip eden üç parçalı komut satırı aracı. Ortak ayarlar
-`ayarlar.py` dosyasında — fon listesi, portföy adetleri ve hedef dağılımı
-oradan düzenlenir.
+TEFAS fonlarını takip eden dört parçalı araç. Ortak ayarlar `ayarlar.py`
+dosyasında — fon listesi, portföy adetleri, hedef dağılım ve (istenirse)
+ortalama alış maliyetleri oradan düzenlenir.
 
 ## Kurulum
 
@@ -10,15 +10,18 @@ oradan düzenlenir.
 pip install -r requirements.txt
 ```
 
-## V1 — Fiyat ve varlık dağılımı (`fon_takip.py`)
+## V1 — Fiyat, günlük getiri ve kategori sırası (`fon_takip.py`)
 
 ```bash
 python fon_takip.py
 ```
 
-`ayarlar.py` içindeki `FONLAR` listesindeki her fon için son fiyatı ve varlık
-sınıfı dağılımını TEFAS'tan çeker, ekrana yazar; `CSV_KAYDET = True` iken
-`fon_dagilim.csv` dosyasına da kaydeder.
+`ayarlar.py` içindeki `FONLAR` listesindeki her fon için son fiyatı, günlük
+getiriyi ve fonun kategorisindeki sırasını TEFAS'tan çeker, ekrana yazar;
+`CSV_KAYDET = True` iken `fon_dagilim.csv` dosyasına da kaydeder.
+
+> Not: TEFAS'ın yeni API'si varlık sınıfı dağılımını artık yayımlamıyor;
+> fon bazlı dağılım için V2'deki KAP raporu kullanılabilir.
 
 ## V2 — KAP aylık rapordan ilk 10 hisse (`kap_rapor.py`)
 
@@ -58,3 +61,34 @@ Gerçek kullanım için önce `ayarlar.py`'de doldur:
 
 Aylık düzen için ay başında `python drift_rapor.py --kaydet` çalıştırman
 yeterli; rapor `drift_rapor_YYYY-AA.md` olarak birikir.
+
+## V4 — Etkileşimli görsel rapor (`rapor_html.py`)
+
+```bash
+python rapor_html.py            # güncel veriyle rapor.html üretir
+python rapor_html.py --ac       # üretip tarayıcıda açar
+python rapor_html.py --onbellek # ağa çıkmadan son çekimin verisiyle üretir
+```
+
+Windows'ta en kolayı: **`rapor.bat`'a çift tıkla** — raporu üretir ve
+tarayıcıda açar.
+
+Tek sayfada neler var:
+
+- Özet kartları, dağılım donut'u ve drift barları (hover ipuçlarıyla)
+- Her fon satırında son `GRAFIK_GUN` (varsayılan 30) günün mini fiyat
+  grafiği ve dönem getirisi; başlığa tıklayarak tablo sıralanır
+- **Adet ve nakit alanları elle değiştirilebilir** — tüm sayfa anında
+  yeniden hesaplanır. Girilen değerler tarayıcıda (localStorage) saklanır,
+  rapor yeniden üretilse de kaybolmaz; "ayarlar.py değerlerine dön"
+  düğmesiyle sıfırlanır. Kalıcı Kaydet kartındaki metni `ayarlar.py`'ye
+  yapıştırarak diğer betiklerle de paylaşabilirsin.
+- `ayarlar.py`'de `MALIYETLER` doldurulursa Kar/Zarar kolonları ve özette
+  toplam K/Z kartı görünür
+- Her üretimde portföy değeri `portfoy_gecmis.csv`'ye kaydedilir; farklı
+  günlerde üretmeye devam ettikçe raporda zaman grafiği oluşur
+- Son başarılı çekim `veri_onbellek.json`'a yazılır; TEFAS'a ulaşılamazsa
+  rapor bu önbellekten üretilir ve sayfada uyarı gösterilir
+
+`rapor.html`, `veri_onbellek.json` ve `portfoy_gecmis.csv` kişisel veri
+içerdiği için `.gitignore`'dadır, depoya gitmez.

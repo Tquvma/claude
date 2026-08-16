@@ -1,6 +1,9 @@
 """
 TEFAS Fon Takip - v1
-Takip edilen fonların son fiyatını ve varlık dağılımını çeker.
+Takip edilen fonların son fiyatını, günlük getirisini ve kategori sırasını çeker.
+
+Not: TEFAS'ın yeni API'si varlık sınıfı dağılımını artık yayımlamıyor;
+gelen veriler fiyat + kategori sıralamasından ibaret.
 
 Kurulum:
     pip install -r requirements.txt
@@ -11,6 +14,7 @@ Kurulum:
 
 import sys
 from datetime import date, timedelta
+from pathlib import Path
 
 import pandas as pd
 
@@ -19,9 +23,7 @@ if sys.stdout.encoding != "utf-8":
 
 from ayarlar import CSV_KAYDET, FONLAR, GUN_SAYISI
 
-# Bu kolonlar dağılım yüzdesi DEĞİL; geri kalan sayısal kolonlar varlık dağılımıdır.
-META_KOLONLAR = {"date", "code", "title", "price", "market_cap",
-                 "number_of_shares", "number_of_investors"}
+CSV_YOLU = Path(__file__).parent / "fon_dagilim.csv"
 
 
 def son_veri(df: pd.DataFrame) -> pd.DataFrame:
@@ -92,21 +94,14 @@ def main() -> None:
         getiri = getiriler.get(satir["code"])
         getiri_str = f"{getiri:+.2f}%" if getiri is not None else "n/a"
         print(f"Tarih: {satir['date']}   Fiyat: {satir['price']}   Günlük getiri: {getiri_str}")
-        print("Varlık dağılımı (%):")
-        for kolon, deger in satir.items():
-            if kolon in META_KOLONLAR:
-                continue
-            try:
-                deger = float(deger)
-            except (TypeError, ValueError):
-                continue
-            if deger > 0:
-                print(f"  {kolon:<28} {deger:>6.2f}")
+        rank, toplam_fon = satir.get("category_rank"), satir.get("category_total")
+        if pd.notna(rank) and pd.notna(toplam_fon) and rank > 0:
+            print(f"Kategori sırası: {int(rank)} / {int(toplam_fon)}")
 
     if CSV_KAYDET:
-        data.to_csv("fon_dagilim.csv", index=False)
+        data.to_csv(CSV_YOLU, index=False)
         print("=" * 60)
-        print("CSV kaydedildi: fon_dagilim.csv")
+        print(f"CSV kaydedildi: {CSV_YOLU}")
 
 
 if __name__ == "__main__":

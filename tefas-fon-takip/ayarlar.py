@@ -1,12 +1,20 @@
 """
-Ortak ayarlar - tüm betikler (fon_takip, kap_rapor, drift_rapor) burayı okur.
-Kendi portföyüne ve planına göre bu dosyayı düzenle.
+Ortak ayarlar - tüm betikler (fon_takip, kap_rapor, drift_rapor, rapor_html)
+burayı okur. Kendi portföyüne ve planına göre bu dosyayı düzenle.
 """
 
 # --- V1: Takip edilen fonlar -------------------------------------------
 FONLAR = ["YAY", "YBE", "ZIH", "YLB", "PHE", "AFA", "AES", "TP2"]  # istediğin gibi düzenle
 GUN_SAYISI = 7        # son kaç güne bakılsın (hafta sonu/tatil payı için)
 CSV_KAYDET = True     # True ise sonuçları fon_dagilim.csv olarak kaydeder
+
+# --- V4: Görsel rapor (rapor_html.py) ----------------------------------
+GRAFIK_GUN = 30       # rapordaki mini fiyat grafiklerinin penceresi (gün)
+
+# Opsiyonel: fon kodu -> ortalama alış fiyatı (TL). Doldurduğun fonlar için
+# raporda Kar/Zarar kolonları ve özette toplam K/Z kartı görünür.
+# Örnek: MALIYETLER = {"YAY": 1750.0, "PHE": 3.20}
+MALIYETLER = {}
 
 # --- V3: Portföyün -----------------------------------------------------
 # Fon kodu -> elindeki pay adedi. Drift raporu bu adetleri güncel fiyatla

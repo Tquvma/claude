@@ -87,5 +87,6 @@ Birkaç tasarım kararı:
 
 ## Diğer araçlar
 
-- [`tefas-fon-takip/`](tefas-fon-takip/README.md) — TEFAS fonlarının son
-  fiyatını ve varlık dağılımını çeken bağımsız Python betiği.
+- [`tefas-fon-takip/`](tefas-fon-takip/README.md) — TEFAS fon fiyatlarını
+  çeken, hedef dağılıma göre drift hesaplayan ve etkileşimli bir HTML
+  raporu üreten bağımsız Python araç seti.

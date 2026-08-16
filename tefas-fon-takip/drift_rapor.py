@@ -14,6 +14,7 @@ HEDEFLER'i kendi planına göre doldur.
 import argparse
 import sys
 from datetime import date
+from pathlib import Path
 
 from ayarlar import DRIFT_ESIK, HEDEFLER, NAKIT_TL, PORTFOY
 
@@ -154,10 +155,9 @@ def main() -> None:
 
     md = raporu_yazdir(satirlar, toplam, kaynak)
     if args.kaydet:
-        ad = f"drift_rapor_{date.today().strftime('%Y-%m')}.md"
-        with open(ad, "w", encoding="utf-8") as f:
-            f.write("\n".join(md) + "\n")
-        print(f"Rapor kaydedildi: {ad}")
+        yol = Path(__file__).parent / f"drift_rapor_{date.today().strftime('%Y-%m')}.md"
+        yol.write_text("\n".join(md) + "\n", encoding="utf-8")
+        print(f"Rapor kaydedildi: {yol}")
 
 
 if __name__ == "__main__":
