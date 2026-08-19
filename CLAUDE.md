@@ -83,6 +83,8 @@ python drift_rapor.py --demo            # V3: target vs. actual allocation, netw
 python drift_rapor.py --kaydet          # V3: real data, writes drift_rapor_YYYY-MM.md
 python rapor_html.py --ac               # V4: interactive rapor.html, opens in browser
 python rapor_html.py --onbellek         # V4: build from last successful fetch, no network call
+python performans_rapor.py --kaydet     # V5: category screen + Sharpe/max-DD/correlation
+python bist_tarama.py --kaydet          # V6: BIST P/E, net cash, FX-revenue screen
 ```
 
 On Windows, double-click `rapor.bat` to run V4 end-to-end without a terminal.
@@ -117,11 +119,38 @@ earlier ones rather than duplicating logic:
   counts and cash are editable inputs that recompute everything client-side and persist to
   `localStorage` (independent of the Python-rendered initial values) — the "Kalıcı Kaydet"
   card lets the user copy the edited values back into `ayarlar.py` Python-dict syntax.
+- **`performans_rapor.py` (V5)** — screens the *entire* non-qualified-investor TEFAS fund
+  universe (excludes `"Serbest Şemsiye Fonu"`, TEFAS's qualified-investor-only category) with
+  AUM ≥ `ayarlar.MIN_FON_BUYUKLUK_TL`, bucketed into 8 categories via a rule-based classifier
+  (`kategori_belirle`) that reads TEFAS's `fonTurAciklama` plus asset-breakdown percentages
+  (e.g. foreign-stock % splits "Hisse Senedi Şemsiye Fonu" into BIST-heavy vs. foreign-equity;
+  title keywords catch thematic/sector and participation funds). Fetches the whole universe's
+  AUM/category/breakdown/returns in **3 bulk HTTP calls** (not the `tefas-crawler` package —
+  it doesn't expose these fields; this script POSTs directly to
+  `fonGnlBlgSiraliGetir`/`dagilimSiraliGetirT`/`fonGetiriBazliBilgiGetir`, the same endpoints
+  the community `pytefas` client uses). Only the top-`KATEGORI_TOP_N`-per-category finalists
+  get a per-fund daily-price-history fetch (via `tefas.Crawler`, rate-limited with a 1s sleep
+  between calls) to compute Sharpe ratio, max drawdown, and a cross-fund correlation matrix.
+  Category classification and the stopaj-rate table (`ayarlar.STOPAJ_ORANLARI`) are heuristics
+  — review before trusting blindly.
+- **`bist_tarama.py` (V6)** — independent of the TEFAS scripts; screens
+  `ayarlar.HISSE_LISTESI` (a curated BIST watchlist, not the whole market) for P/E, net cash,
+  and FX-revenue share, hitting İş Yatırım's undocumented public JSON endpoints directly with
+  a 30s timeout (bypasses the `isyatirimhisse` package, which is *not* a dependency here — its
+  own hardcoded 10s timeout was observed to fail against these endpoints). P/E is computed as
+  market cap ÷ last-full-fiscal-year net income (`3Z` line item), **not** price ÷ the
+  statement's own EPS field (`3ZD`) — that field's scale was found to be inconsistent between
+  companies (TL vs. kuruş) during live testing, so it's ignored. Net cash = cash & equivalents
+  (`1AA`) − short/long-term financial debt (`2AA`/`2BA`); FX-revenue % = domestic/export sales
+  split (`4BC`/`4BD`). Banks/financials report under a different statement format
+  (`financial_group`) and currently come back as "veri yok".
 
 ### Generated / personal-data files (gitignored, never commit)
 
 `fon_dagilim.csv`, `drift_rapor_*.md`, `rapor.html`, `veri_onbellek.json`,
 `portfoy_gecmis.csv` — all contain the user's actual portfolio numbers and are regenerated
-by running the scripts. `ayarlar.py` itself (fund codes, share counts, cash, targets) *is*
-committed, since it's the shared config the scripts read — be aware it carries real
-portfolio data if this repo is ever made public.
+by running the scripts. `performans_rapor_*.md`, `korelasyon_matrisi_*.csv`, and
+`bist_tarama_*.md` (V5/V6 outputs) are also gitignored — not personal, but regenerable
+market-data snapshots that would just bloat the repo. `ayarlar.py` itself (fund codes, share
+counts, cash, targets) *is* committed, since it's the shared config the scripts read — be
+aware it carries real portfolio data if this repo is ever made public.

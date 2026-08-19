@@ -92,3 +92,46 @@ Tek sayfada neler var:
 
 `rapor.html`, `veri_onbellek.json` ve `portfoy_gecmis.csv` kişisel veri
 içerdiği için `.gitignore`'dadır, depoya gitmez.
+
+## V5 — TEFAS performans taraması, "dikiz aynası" (`performans_rapor.py`)
+
+TEFAS'ın nitelikli-yatırımcıya-özel olmayan (`Serbest Şemsiye Fonu` hariç)
+ve büyüklüğü `ayarlar.MIN_FON_BUYUKLUK_TL`'yi aşan fon evrenini sekiz
+kategoriye ayırır — BIST hisse yoğun, yabancı hisse, teknoloji/tema,
+değişken, borçlanma/eurobond, para piyasası, karma, katılım — ve her
+kategoride son `ayarlar.PERFORMANS_AY` aylık getiriye göre ilk
+`ayarlar.KATEGORI_TOP_N` fonu seçer. Finalistler için Sharpe oranı,
+maksimum drawdown ve stopaj oranını (`ayarlar.STOPAJ_ORANLARI`) hesaplar,
+aralarındaki korelasyon matrisini çıkarır ve tüm kategoriler genelinde en
+çok kazandıran fonları listeler.
+
+```bash
+python performans_rapor.py            # ekrana yazdırır
+python performans_rapor.py --kaydet    # performans_rapor_YYYY-AA.md +
+                                        # korelasyon_matrisi_YYYY-AA.csv
+```
+
+Kategori sınıflandırması (fon unvanı + TEFAS varlık dağılımı yüzdelerine
+dayalı kural tabanlı bir sezgiseldir) ve stopaj tablosu kesin değildir —
+şüpheli sınıflandırmaları ve güncel mevzuata göre stopaj oranlarını
+gözden geçir. Sharpe oranı için risksiz getiri varsayımı
+`ayarlar.RISKSIZ_YILLIK_ORAN`'da elle güncellenir (otomatik/güvenilir bir
+TL risksiz oran kaynağı yok).
+
+## V6 — BIST temel analiz taraması (`bist_tarama.py`)
+
+`ayarlar.HISSE_LISTESI`'ndeki BIST hisseleri için İş Yatırım'ın kamuya
+açık (resmi olmayan) uç noktalarından F/K oranı (piyasa değeri / son
+tamamlanmış mali yılın net kârı), net nakit (nakit ve nakit benzerleri −
+kısa+uzun vadeli finansal borçlar) ve FX gelir oranını (yurtdışı satışlar
+/ toplam satışlar) çekip sıralı bir tarama listesi üretir.
+
+```bash
+python bist_tarama.py            # ekrana yazdırır
+python bist_tarama.py --kaydet   # bist_tarama_YYYY-AA.md olarak kaydet
+```
+
+Kaynak resmi olmayan bir uç nokta olduğu için kırılgan olabilir; bir
+hissede veri gelmezse o hisse "n/a" ile işaretlenip diğerleri işlenmeye
+devam eder. Banka/finans şirketleri farklı bir mali tablo formatı
+kullandığından (şu an desteklenmiyor) genelde "veri yok" görünür.

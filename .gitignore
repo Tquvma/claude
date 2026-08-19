@@ -8,6 +8,9 @@ tefas-fon-takip/drift_rapor_*.md
 tefas-fon-takip/rapor.html
 tefas-fon-takip/veri_onbellek.json
 tefas-fon-takip/portfoy_gecmis.csv
+tefas-fon-takip/performans_rapor_*.md
+tefas-fon-takip/korelasyon_matrisi_*.csv
+tefas-fon-takip/bist_tarama_*.md
 
 # build
 dist/
